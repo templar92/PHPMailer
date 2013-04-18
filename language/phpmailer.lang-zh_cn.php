@@ -20,7 +20,7 @@ $PHPMAILER_LANG['mailer_not_supported'] = '发信客户端不被支持。';
 $PHPMAILER_LANG['provide_address'] = '必须提供至少一个收件人地址。';
 $PHPMAILER_LANG['recipients_failed'] = 'SMTP 错误：收件人地址错误：';
 //$PHPMAILER_LANG['signing']              = 'Signing Error: ';
-//$PHPMAILER_LANG['smtp_connect_failed']  = 'SMTP Connect() failed.';
+//$PHPMAILER_LANG['smtp_connect_failed']  = 'SMTP Connect() failed. ';
 //$PHPMAILER_LANG['smtp_error']           = 'SMTP server error: ';
 //$PHPMAILER_LANG['variable_set']         = 'Cannot set or reset variable: ';
 ?>

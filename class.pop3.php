@@ -132,8 +132,8 @@ class POP3 {
    */
   public function __construct() {
     $this->pop_conn  = 0;
-    $this->connected = false;
-    $this->error     = null;
+    $this->connected = FALSE;
+    $this->error     = NULL;
   }
 
   /**
@@ -145,18 +145,18 @@ class POP3 {
    * @param string $username
    * @param string $password
    */
-  public function Authorise ($host, $port = false, $tval = false, $username, $password, $debug_level = 0) {
+  public function Authorise ($host, $port = FALSE, $tval = FALSE, $username, $password, $debug_level = 0) {
     $this->host = $host;
 
     //  If no port value is passed, retrieve it
-    if ($port == false) {
+    if ($port == FALSE) {
       $this->port = $this->POP3_PORT;
     } else {
       $this->port = $port;
     }
 
     //  If no port value is passed, retrieve it
-    if ($tval == false) {
+    if ($tval == FALSE) {
       $this->tval = $this->POP3_TIMEOUT;
     } else {
       $this->tval = $tval;
@@ -167,10 +167,10 @@ class POP3 {
     $this->password = $password;
 
     //  Refresh the error log
-    $this->error = null;
+    $this->error = NULL;
 
     //  Connect
-    $result = $this->Connect($this->host, $this->port, $this->tval);
+    $result = $this->connect($this->host, $this->port, $this->tval);
 
     if ($result) {
       $login_result = $this->Login($this->username, $this->password);
@@ -178,7 +178,7 @@ class POP3 {
       if ($login_result) {
         $this->Disconnect();
 
-        return true;
+        return TRUE;
       }
 
     }
@@ -186,7 +186,7 @@ class POP3 {
     //  We need to disconnect regardless if the login succeeded
     $this->Disconnect();
 
-    return false;
+    return FALSE;
   }
 
   /**
@@ -197,10 +197,10 @@ class POP3 {
    * @param integer $tval
    * @return boolean
    */
-  public function Connect ($host, $port = false, $tval = 30) {
+  public function Connect ($host, $port = FALSE, $tval = 30) {
     //  Are we already connected?
     if ($this->connected) {
-      return true;
+      return TRUE;
     }
 
     /*
@@ -226,7 +226,7 @@ class POP3 {
     }
 
     //  Did we connect?
-    if ($this->pop_conn == false) {
+    if ($this->pop_conn == FALSE) {
       //  It would appear not...
       $this->error = array(
         'error' => "Failed to connect to server $host on port $port",
@@ -238,7 +238,7 @@ class POP3 {
         $this->displayErrors();
       }
 
-      return false;
+      return FALSE;
     }
 
     //  Increase the stream time-out
@@ -259,8 +259,8 @@ class POP3 {
     //  Check for the +OK
     if ($this->checkResponse($pop3_response)) {
     //  The connection is established and the POP3 server is talking
-    $this->connected = true;
-      return true;
+    $this->connected = TRUE;
+      return TRUE;
     }
 
   }
@@ -273,7 +273,7 @@ class POP3 {
    * @return boolean
    */
   public function Login ($username = '', $password = '') {
-    if ($this->connected == false) {
+    if ($this->connected == FALSE) {
       $this->error = 'Not connected to POP3 server';
 
       if ($this->do_debug >= 1) {
@@ -289,8 +289,8 @@ class POP3 {
       $password = $this->password;
     }
 
-    $pop_username = "USER $username" . $this->CRLF;
-    $pop_password = "PASS $password" . $this->CRLF;
+    $pop_username = "USER $username" . Mailer::CRLF;
+    $pop_password = "PASS $password" . Mailer::CRLF;
 
     //  Send the Username
     $this->sendString($pop_username);
@@ -302,12 +302,12 @@ class POP3 {
       $pop3_response = $this->getResponse();
 
       if ($this->checkResponse($pop3_response)) {
-        return true;
+        return TRUE;
       } else {
-        return false;
+        return FALSE;
       }
     } else {
-      return false;
+      return FALSE;
     }
   }
 
@@ -368,9 +368,9 @@ class POP3 {
         $this->displayErrors();
       }
 
-      return false;
+      return FALSE;
     } else {
-      return true;
+      return TRUE;
     }
 
   }

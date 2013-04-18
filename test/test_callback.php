@@ -27,38 +27,38 @@ function callbackAction ($result, $to, $cc, $bcc, $subject, $body) {
   $cc  = cleanEmails($cc[0],'cc');
   $bcc = cleanEmails($bcc[0],'cc');
   echo $result . "\tTo: "  . $to['Name'] . "\tTo: "  . $to['Email'] . "\tCc: "  . $cc['Name'] . "\tCc: "  . $cc['Email'] . "\tBcc: "  . $bcc['Name'] . "\tBcc: "  . $bcc['Email'] . "\t"  . $subject . "<br />\n";
-  return true;
+  return TRUE;
 }
 
-$testLite = false;
+$testLite = FALSE;
 
 if ($testLite) {
-  require_once '../class.phpmailer-lite.php';
+  require_once ' ../class.phpmailer-lite.php';
   $mail = new PHPMailerLite();
 } else {
-  require_once '../class.phpmailer.php';
+  require_once ' ../class.phpmailer.php';
   $mail = new PHPMailer();
 }
 
 try {
-  $mail->IsMail(); // telling the class to use SMTP
-  $mail->SetFrom('you@yourdomain.com', 'Your Name');
-  $mail->AddAddress('another@yourdomain.com', 'John Doe');
-  $mail->Subject = 'PHPMailer Lite Test Subject via Mail()';
-  $mail->AltBody = 'To view the message, please use an HTML compatible email viewer!'; // optional - MsgHTML will create an alternate automatically
-  $mail->MsgHTML(file_get_contents('contents.html'));
-  $mail->AddAttachment('images/phpmailer.gif');      // attachment
-  $mail->AddAttachment('images/phpmailer_mini.gif'); // attachment
-  $mail->action_function = 'callbackAction';
-  $mail->Send();
+  $mail->isMail(); // telling the class to use SMTP
+  $mail->setFrom('you@yourdomain.com', 'Your Name');
+  $mail->addAddress('another@yourdomain.com', 'John Doe');
+  $mail->subject = 'PHPMailer Lite Test Subject via Mail()';
+  $mail->alt_body = 'To view the message, please use an HTML compatible email viewer!'; // optional - MsgHTML will create an alternate automatically
+  $mail->msgHtml(file_get_contents('contents.html'));
+  $mail->addAttachment('images/phpmailer.gif');      // attachment
+  $mail->addAttachment('images/phpmailer_mini.gif'); // attachment
+  $mail->callback = 'callbackAction';
+  $mail->send();
   echo "Message Sent OK</p>\n";
-} catch (phpmailerException $e) {
+} catch (MailerException $e) {
   echo $e->errorMessage(); //Pretty error messages from PHPMailer
 } catch (Exception $e) {
   echo $e->getMessage(); //Boring error messages from anything else!
 }
 
-function cleanEmails($str,$type) {
+function cleanEmails($str, $type) {
   if ($type == 'cc') {
     $addy['Email'] = $str[0];
     $addy['Name']  = $str[1];

@@ -4,6 +4,8 @@ class Mailer {
     // CONSTANTS
     /////////////////////////////////////////////////
     
+    const CRLF = "\r\n";
+    
     const STOP_MESSAGE  = 0; // message only, continue processing
     const STOP_CONTINUE = 1; // message?, likely ok to continue processing
     const STOP_CRITICAL = 2; // message, plus full stop, critical error reached
@@ -1652,18 +1654,13 @@ class Mailer {
         return "X-MAILER-DKIM: mailer.kyoku.com\r\n" . $dkimhdrs . $signed . "\r\n";
     }
   
-  protected function doCallback($is_sent, $to, $cc, $bcc, $subject, $body) {
-    if (!empty($this->callback) && function_exists($this->callback)) {
-      $params = array($is_sent, $to, $cc, $bcc, $subject, $body);
-      call_user_func_array($this->callback, $params);
+    protected function doCallback($is_sent, $to, $cc, $bcc, $subject, $body) {
+        if (!empty($this->callback) && function_exists($this->callback)) {
+            $params = array($is_sent, $to, $cc, $bcc, $subject, $body);
+            call_user_func_array($this->callback, $params);
+        }
     }
-  }
 }
 
-class MailerException extends Exception {
-  public function errorMessage() {
-    $errorMsg = '<strong>' . $this->getMessage() . "</strong><br />\n";
-    return $errorMsg;
-  }
-}
+class MailerException extends Exception {}
 ?>

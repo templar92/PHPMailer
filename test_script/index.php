@@ -17,16 +17,16 @@
 
 echo 'Current PHP version: ' . phpversion() . "<br />";
 
-if ( substr(phpversion(),0,1) < 5 ) { echo exit("ERROR: Wrong PHP version"); }
+if (substr(phpversion(),0,1) < 5 ) { echo exit("ERROR: Wrong PHP version"); }
 
 $CFG['smtp_debug']        = 1;
 $CFG['smtp_server']       = 'mail.yourserver.com';
 $CFG['smtp_port']         = '25';
-$CFG['smtp_authenticate'] = 'true';
+$CFG['smtp_authenticate'] = 'TRUE';
 $CFG['smtp_username']     = 'name@yourserver.com';
 $CFG['smtp_password']     = 'yourpassword';
 
-if ( $_POST['submit'] == "Submit" ) {
+if ($_POST['submit'] == "Submit" ) {
 
   class phpmailerAppException extends Exception {
     public function errorMessage() {
@@ -37,88 +37,88 @@ if ( $_POST['submit'] == "Submit" ) {
 
   try {
     $to = $_POST['To_Email'];
-    if(filter_var($to, FILTER_VALIDATE_EMAIL) === FALSE) {
+    if (filter_var($to, FILTER_VALIDATE_EMAIL) === FALSE) {
       throw new phpmailerAppException("Email address " . $to . " is invalid -- aborting!<br />");
     }
   } catch (phpmailerAppException $e) {
     echo $e->errorMessage();
-    return false;
+    return FALSE;
   }
 
-  require_once("../class.phpmailer.php");
+  require_once(" ../class.phpmailer.php");
 
   $mail = new PHPMailer();
 
-  if ( $_POST['Message'] == '' ) {
+  if ($_POST['Message'] == '' ) {
     $body             = $mail->getFile('contents.html');
-    $body             = eregi_replace("[\]",'',$body);
+    $body             = eregi_replace("[\]",'', $body);
   } else {
     $body = $_POST['Message'];
   }
 
-  if ( $_POST['test_type'] == "smtp" ) {
-    $mail->IsSMTP();  // telling the class to use SMTP
-    $mail->SMTPDebug  = $_POST['smtp_debug'];
-    $mail->SMTPAuth   = $_POST['smtp_authenticate'];     // enable SMTP authentication
-    $mail->Port       = $_POST['smtp_port'];             // set the SMTP port
-    $mail->Host       = $_POST['smtp_server'];           // SMTP server
-    $mail->Username   = $_POST['authenticate_username']; // SMTP account username
+  if ($_POST['test_type'] == "smtp" ) {
+    $mail->isSmtp();  // telling the class to use SMTP
+    $mail->smtp_debug  = $_POST['smtp_debug'];
+    $mail->smtp_auth   = $_POST['smtp_authenticate'];     // enable SMTP authentication
+    $mail->port       = $_POST['smtp_port'];             // set the SMTP port
+    $mail->host       = $_POST['smtp_server'];           // SMTP server
+    $mail->username   = $_POST['authenticate_username']; // SMTP account username
     $mail->Password   = $_POST['authenticate_password']; // SMTP account password
-  } elseif ( $_POST['test_type'] == "mail" ) {
-    $mail->IsMail();      // telling the class to use PHP's Mail()
-  } elseif ( $_POST['test_type'] == "sendmail" ) {
-    $mail->IsSendmail();  // telling the class to use Sendmail
-  } elseif ( $_POST['test_type'] == "qmail" ) {
-    $mail->IsQmail();     // telling the class to use Qmail
+  } elseif ($_POST['test_type'] == "mail" ) {
+    $mail->isMail();      // telling the class to use PHP's Mail()
+  } elseif ($_POST['test_type'] == "sendmail" ) {
+    $mail->isSendmail();  // telling the class to use Sendmail
+  } elseif ($_POST['test_type'] == "qmail" ) {
+    $mail->isQmail();     // telling the class to use Qmail
   }
 
-  if ( $_POST['From_Name'] != '' ) {
-    $mail->AddReplyTo($_POST['From_Email'],$_POST['From_Name']);
-    $mail->From       = $_POST['From_Email'];
-    $mail->FromName   = $_POST['From_Name'];
+  if ($_POST['From_Name'] != '' ) {
+    $mail->addReplyTo($_POST['From_Email'], $_POST['From_Name']);
+    $mail->from       = $_POST['From_Email'];
+    $mail->from_name   = $_POST['From_Name'];
   } else {
-    $mail->AddReplyTo($_POST['From_Email']);
-    $mail->From       = $_POST['From_Email'];
-    $mail->FromName   = $_POST['From_Email'];
+    $mail->addReplyTo($_POST['From_Email']);
+    $mail->from       = $_POST['From_Email'];
+    $mail->from_name   = $_POST['From_Email'];
   }
 
-  if ( $_POST['To_Name'] != '' ) {
-    $mail->AddAddress($to,$_POST['To_Name']);
+  if ($_POST['To_Name'] != '' ) {
+    $mail->addAddress($to, $_POST['To_Name']);
   } else {
-    $mail->AddAddress($to);
+    $mail->addAddress($to);
   }
 
-  if ( $_POST['bcc_Email'] != '' ) {
+  if ($_POST['bcc_Email'] != '' ) {
     $indiBCC = explode(" ", $_POST['bcc_Email']);
     foreach ($indiBCC as $key => $value) {
-      $mail->AddBCC($value);
+      $mail->addBcc($value);
     }
   }
 
-  if ( $_POST['cc_Email'] != '' ) {
+  if ($_POST['cc_Email'] != '' ) {
     $indiCC = explode(" ", $_POST['cc_Email']);
     foreach ($indiCC as $key => $value) {
-      $mail->AddCC($value);
+      $mail->addCc($value);
     }
   }
 
-  $mail->Subject  = $_POST['Subject'] . ' (PHPMailer test using ' . strtoupper($_POST['test_type']) . ')';
+  $mail->subject  = $_POST['Subject'] . ' (PHPMailer test using ' . strtoupper($_POST['test_type']) . ')';
 
-  require_once('../class.html2text.inc.php');
+  require_once(' ../class.html2text.inc.php');
   $h2t =& new html2text($body);
-  $mail->AltBody = $h2t->get_text();
-  //$mail->AltBody    = "To view the message, please use an HTML compatible email viewer!"; // optional, comment out and test
-  $mail->WordWrap   = 80; // set word wrap
+  $mail->alt_body = $h2t->get_text();
+  //$mail->alt_body    = "To view the message, please use an HTML compatible email viewer!"; // optional, comment out and test
+  $mail->word_wrap   = 80; // set word wrap
 
-  $mail->MsgHTML($body);
+  $mail->msgHtml($body);
 
-  // $mail->IsHTML(true); // send as HTML
+  // $mail->isHtml(TRUE); // send as HTML
 
-  $mail->AddAttachment("images/aikido.gif", "aikido.gif");  // optional name
-  $mail->AddAttachment("images/phpmailer.gif", "phpmailer.gif");  // optional name
+  $mail->addAttachment("images/aikido.gif", "aikido.gif");  // optional name
+  $mail->addAttachment("images/phpmailer.gif", "phpmailer.gif");  // optional name
 
   try {
-    if ( !$mail->Send() ) {
+    if (!$mail->send() ) {
       $error = "Unable to send to: " . $to . "<br />";
       throw new phpmailerAppException($error);
     } else {
@@ -129,7 +129,7 @@ if ( $_POST['submit'] == "Submit" ) {
     $errorMsg[] = $e->errorMessage();
   }
 
-  if ( count($errorMsg) > 0 ) {
+  if (count($errorMsg) > 0 ) {
     foreach ($errorMsg as $key => $value) {
       $thisError = $key + 1;
       echo $thisError . ': ' . $value;
@@ -181,89 +181,89 @@ class phpmailerAppException extends Exception {
 
 try {
   $to = <?php echo $_POST['To_Email']; ?>;
-  if(filter_var($to, FILTER_VALIDATE_EMAIL) === FALSE) {
+  if (filter_var($to, FILTER_VALIDATE_EMAIL) === FALSE) {
     throw new phpmailerAppException("Email address " . $to . " is invalid -- aborting!<br />");
   }
 } catch (phpmailerAppException $e) {
   echo $e->errorMessage();
-  return false;
+  return FALSE;
 }
 
-require_once("../class.phpmailer.php");
+require_once(" ../class.phpmailer.php");
 
 $mail = new PHPMailer();
 
 <?php
-if ( $_POST['Message'] == '' ) {
+if ($_POST['Message'] == '' ) {
   echo '$body             = $mail->getFile(\'contents.html\');' . "\n";
-  echo '$body             = eregi_replace("[\]",\'\',$body);' . "\n";
+  echo '$body             = eregi_replace("[\]",\'\', $body);' . "\n";
 } else {
   echo '$body = ' . $_POST['Message'] . "\n";
 }
 
 echo "\n";
 
-if ( $_POST['test_type'] == "smtp" ) {
-  echo '$mail->IsSMTP();  // telling the class to use SMTP' . "\n";
-  echo '$mail->SMTPDebug  = ' . $_POST['smtp_debug'] . "\n";
-  echo '$mail->SMTPAuth   = ' . $_POST['smtp_authenticate'];     // enable SMTP authentication' . "\n";
-  echo '$mail->Port       = ' . $_POST['smtp_port'];             // set the SMTP port' . "\n";
-  echo '$mail->Host       = ' . $_POST['smtp_server'];           // SMTP server' . "\n";
-  echo '$mail->Username   = ' . $_POST['authenticate_username']; // SMTP account username' . "\n";
+if ($_POST['test_type'] == "smtp" ) {
+  echo '$mail->isSmtp();  // telling the class to use SMTP' . "\n";
+  echo '$mail->smtp_debug  = ' . $_POST['smtp_debug'] . "\n";
+  echo '$mail->smtp_auth   = ' . $_POST['smtp_authenticate'];     // enable SMTP authentication' . "\n";
+  echo '$mail->port       = ' . $_POST['smtp_port'];             // set the SMTP port' . "\n";
+  echo '$mail->host       = ' . $_POST['smtp_server'];           // SMTP server' . "\n";
+  echo '$mail->username   = ' . $_POST['authenticate_username']; // SMTP account username' . "\n";
   echo '$mail->Password   = ' . $_POST['authenticate_password']; // SMTP account password' . "\n";
-} elseif ( $_POST['test_type'] == "mail" ) {
-  echo '$mail->IsMail();      // telling the class to use PHP\'s Mail()' . "\n";
-} elseif ( $_POST['test_type'] == "sendmail" ) {
-  echo '$mail->IsSendmail();  // telling the class to use Sendmail' . "\n";
-} elseif ( $_POST['test_type'] == "qmail" ) {
-  echo '$mail->IsQmail();     // telling the class to use Qmail' . "\n";
+} elseif ($_POST['test_type'] == "mail" ) {
+  echo '$mail->isMail();      // telling the class to use PHP\'s Mail()' . "\n";
+} elseif ($_POST['test_type'] == "sendmail" ) {
+  echo '$mail->isSendmail();  // telling the class to use Sendmail' . "\n";
+} elseif ($_POST['test_type'] == "qmail" ) {
+  echo '$mail->isQmail();     // telling the class to use Qmail' . "\n";
 }
 ?>
 
-$mail->AddReplyTo('<?php echo $_POST['From_Email']; ?>','<?php echo $_POST['From_Name']; ?>');
+$mail->addReplyTo('<?php echo $_POST['From_Email']; ?>','<?php echo $_POST['From_Name']; ?>');
 
-$mail->From       = '<?php echo $_POST['From_Email']; ?>';
-$mail->FromName   = '<?php echo $_POST['From_Name']; ?>';
+$mail->from       = '<?php echo $_POST['From_Email']; ?>';
+$mail->from_name   = '<?php echo $_POST['From_Name']; ?>';
 
 <?php
-if ( $_POST['To_Name'] != '' ) {
+if ($_POST['To_Name'] != '' ) {
   ?>
-$mail->AddAddress('<?php echo $to; ?>','<?php echo $_POST['To_Name']; ?>');
+$mail->addAddress('<?php echo $to; ?>','<?php echo $_POST['To_Name']; ?>');
   <?php
 } else {
   ?>
-$mail->AddAddress('<?php echo $to; ?>');
+$mail->addAddress('<?php echo $to; ?>');
   <?php
 }
-if ( $_POST['bcc_Email'] != '' ) {
+if ($_POST['bcc_Email'] != '' ) {
   $indiBCC = explode(" ", $_POST['bcc_Email']);
   foreach ($indiBCC as $key => $value) {
-echo '$mail->AddBCC(\'' . $value . '\');<br />';
+echo '$mail->addBcc(\'' . $value . '\');<br />';
   }
 }
 
-if ( $_POST['cc_Email'] != '' ) {
+if ($_POST['cc_Email'] != '' ) {
   $indiCC = explode(" ", $_POST['cc_Email']);
   foreach ($indiCC as $key => $value) {
-echo '$mail->AddCC(\'' . $value . '\');<br />';
+echo '$mail->addCc(\'' . $value . '\');<br />';
   }
 }
 ?>
 
-$mail->Subject  = <?php echo $_POST['Subject']; ?> (PHPMailer test using <?php echo strtoupper($_POST['test_type']); ?>)
+$mail->subject  = <?php echo $_POST['Subject']; ?> (PHPMailer test using <?php echo strtoupper($_POST['test_type']); ?>)
 
-require_once('../class.html2text.inc.php');
+require_once(' ../class.html2text.inc.php');
 $h2t =& new html2text($body);
-$mail->AltBody = $h2t->get_text();
-$mail->WordWrap   = 80; // set word wrap
+$mail->alt_body = $h2t->get_text();
+$mail->word_wrap   = 80; // set word wrap
 
-$mail->MsgHTML($body);
+$mail->msgHtml($body);
 
-$mail->AddAttachment("images/aikido.gif", "aikido.gif");  // optional name
-$mail->AddAttachment("images/phpmailer.gif", "phpmailer.gif");  // optional name
+$mail->addAttachment("images/aikido.gif", "aikido.gif");  // optional name
+$mail->addAttachment("images/phpmailer.gif", "phpmailer.gif");  // optional name
 
 try {
-  if ( !$mail->Send() ) {
+  if (!$mail->send() ) {
     $error = "Unable to send to: " . $to . "<br />";
     throw new phpmailerAppException($error);
   } else {
@@ -273,7 +273,7 @@ try {
   $errorMsg[] = $e->errorMessage();
 }
 
-if ( count($errorMsg) > 0 ) {
+if (count($errorMsg) > 0 ) {
   foreach ($errorMsg as $key => $value) {
     $thisError = $key + 1;
     echo $thisError . ': ' . $value;
@@ -310,12 +310,12 @@ if ( count($errorMsg) > 0 ) {
       <td valign="top";><strong>Message</strong><br /><br />
         <table border="1" width="450" cellspacing="0" cellpadding="5" style="border-collapse: collapse;" bgcolor="#FFFFFF">
           <tr>
-            <td class="colleft">From Name</td>
+            <td class="colleft">from Name</td>
             <?php $value = ( $_POST['From_Name'] != '' ) ? $_POST['From_Name'] : ''; ?>
             <td class="colrite"><input type="text" name="From_Name" value="<?php echo $value; ?>" style="width:99%;"></td>
           </tr>
           <tr>
-            <td class="colleft">From Email Address</td>
+            <td class="colleft">from Email Address</td>
             <?php $value = ( $_POST['From_Email'] != '' ) ? $_POST['From_Email'] : ''; ?>
             <td class="colrite"><input type="text" name="From_Email" value="<?php echo $value; ?>" style="width:99%;"></td>
           </tr>
@@ -340,7 +340,7 @@ if ( count($errorMsg) > 0 ) {
             <td class="colrite"><input type="text" name="bcc_Email" value="<?php echo $value; ?>" style="width:99%;"></td>
           </tr>
           <tr>
-            <td class="colleft">Subject</td>
+            <td class="colleft">subject</td>
             <?php $value = ( $_POST['Subject'] != '' ) ? $_POST['Subject'] : ''; ?>
             <td class="colrite"><input type="text" name="Subject" value="<?php echo $value; ?>" style="width:99%;"></td>
           </tr>
@@ -362,7 +362,7 @@ if ( count($errorMsg) > 0 ) {
                 </tr>
                 <tr>
                   <td><input type="radio" name="test_type" value="sendmail" <?php echo ( $_POST['test_type'] == 'sendmail') ? 'checked' : ''; ?>></td>
-                  <td>Sendmail</td>
+                  <td>sendmail</td>
                 </tr>
                 <tr>
                   <td><input type="radio" name="test_type" value="qmail" <?php echo ( $_POST['test_type'] == 'qmail') ? 'checked' : ''; ?>></td>

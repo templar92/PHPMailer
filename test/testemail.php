@@ -5,44 +5,44 @@
 * @version $Id$
 */
 
-require '../class.phpmailer.php';
+require ' ../class.phpmailer.php';
 
 try {
-	$mail = new PHPMailer(true); //New instance, with exceptions enabled
+	$mail = new PHPMailer(TRUE); //New instance, with exceptions enabled
 
 	$body             = file_get_contents('contents.html');
 	$body             = preg_replace('/\\\\/','', $body); //Strip backslashes
 
-	$mail->IsSMTP();                           // tell the class to use SMTP
-	$mail->SMTPAuth   = true;                  // enable SMTP authentication
-	$mail->Port       = 25;                    // set the SMTP server port
-	$mail->Host       = "mail.yourdomain.com"; // SMTP server
-	$mail->Username   = "name@domain.com";     // SMTP server username
+	$mail->isSmtp();                           // tell the class to use SMTP
+	$mail->smtp_auth   = TRUE;                  // enable SMTP authentication
+	$mail->port       = 25;                    // set the SMTP server port
+	$mail->host       = "mail.yourdomain.com"; // SMTP server
+	$mail->username   = "name@domain.com";     // SMTP server username
 	$mail->Password   = "password";            // SMTP server password
 
-	$mail->IsSendmail();  // tell the class to use Sendmail
+	$mail->isSendmail();  // tell the class to use Sendmail
 
-	$mail->AddReplyTo("name@domain.com","First Last");
+	$mail->addReplyTo("name@domain.com","First Last");
 
-	$mail->From       = "name@domain.com";
-	$mail->FromName   = "First Last";
+	$mail->from       = "name@domain.com";
+	$mail->from_name   = "First Last";
 
 	$to = "someone@example...com";
 
-	$mail->AddAddress($to);
+	$mail->addAddress($to);
 
-	$mail->Subject  = "First PHPMailer Message";
+	$mail->subject  = "First PHPMailer Message";
 
-	$mail->AltBody    = "To view the message, please use an HTML compatible email viewer!"; // optional, comment out and test
-	$mail->WordWrap   = 80; // set word wrap
+	$mail->alt_body    = "To view the message, please use an HTML compatible email viewer!"; // optional, comment out and test
+	$mail->word_wrap   = 80; // set word wrap
 
-	$mail->MsgHTML($body);
+	$mail->msgHtml($body);
 
-	$mail->IsHTML(true); // send as HTML
+	$mail->isHtml(TRUE); // send as HTML
 
-	$mail->Send();
-	echo 'Message has been sent.';
-} catch (phpmailerException $e) {
+	$mail->send();
+	echo 'Message has been sent. ';
+} catch (MailerException $e) {
 	echo $e->errorMessage();
 }
 ?>
