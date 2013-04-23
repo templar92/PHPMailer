@@ -1,6 +1,8 @@
 <?php
 class Smtp {
 
+    const DEFAULT_PORT = 25;
+
     public $do_debug;       // the level of debug to perform
     public $do_verp = FALSE;
     public $version         = '5.2.1';
@@ -29,7 +31,7 @@ class Smtp {
   // CONNECTION FUNCTIONS
   /////////////////////////////////////////////////
 
-    public function connect($host, $port=25, $tval=30) {
+    public function connect($host, $port=self::DEFAULT_PORT, $tval=30) {
         // set the error val to NULL so there is no confusion
         $this->error = NULL;
         // make sure we are __not__ connected
@@ -66,17 +68,17 @@ class Smtp {
     }
 
     public function startTls() {
-        $this->error = NULL; # to avoid confusion        
+        $this->error = NULL; # to avoid confusion
         if (!$this->connected()) {
             $this->error = array('error' => 'Called startTls() without being connected');
             return FALSE;
-        }        
-        fputs($this->smtp_conn, 'STARTTLS' . Mailer::CRLF);        
+        }
+        fputs($this->smtp_conn, 'STARTTLS' . Mailer::CRLF);
         $rply = $this->getLines();
-        $code = substr($rply, 0, 3);        
+        $code = substr($rply, 0, 3);
         if ($this->do_debug >= 2) {
             echo 'SMTP -> FROM SERVER:' . $rply . Mailer::CRLF . '<br />';
-        }        
+        }
         if ($code != 220) {
             $this->error = array(
                 'error'     => 'STARTTLS not accepted from server',
@@ -92,9 +94,9 @@ class Smtp {
 
     public function authenticate($username, $password) {
         // Start authentication
-        fputs($this->smtp_conn, 'AUTH LOGIN' . Mailer::CRLF);        
+        fputs($this->smtp_conn, 'AUTH LOGIN' . Mailer::CRLF);
         $rply = $this->getLines();
-        $code = substr($rply,0,3);        
+        $code = substr($rply,0,3);
         if ($code != 334) {
             $this->error = array(
                 'error'     => 'AUTH not accepted from server',
@@ -105,11 +107,11 @@ class Smtp {
                 echo 'SMTP -> ERROR: ' . $this->error['error'] . ': ' . $rply . Mailer::CRLF . '<br />';
             }
             return FALSE;
-        }        
+        }
         // Send encoded username
-        fputs($this->smtp_conn, base64_encode($username) . Mailer::CRLF);        
+        fputs($this->smtp_conn, base64_encode($username) . Mailer::CRLF);
         $rply = $this->getLines();
-        $code = substr($rply, 0, 3);        
+        $code = substr($rply, 0, 3);
         if ($code != 334) {
             $this->error = array(
                 'error' => 'Username not accepted from server',
@@ -119,11 +121,11 @@ class Smtp {
                 echo 'SMTP -> ERROR: ' . $this->error['error'] . ': ' . $rply . Mailer::CRLF . '<br />';
             }
             return FALSE;
-        }        
+        }
         // Send encoded password
-        fputs($this->smtp_conn, base64_encode($password) . Mailer::CRLF);        
+        fputs($this->smtp_conn, base64_encode($password) . Mailer::CRLF);
         $rply = $this->getLines();
-        $code = substr($rply, 0, 3);        
+        $code = substr($rply, 0, 3);
         if ($code != 235) {
             $this->error = array(
                 'error'     => 'Password not accepted from server',
@@ -134,7 +136,7 @@ class Smtp {
                 echo "SMTP -> ERROR: " . $this->error['error'] . ": " . $rply . Mailer::CRLF . '<br />';
             }
             return FALSE;
-        }        
+        }
         return TRUE;
     }
 
@@ -187,167 +189,139 @@ class Smtp {
    * @access public
    * @return bool
    */
-  public function Data($msg_data) {
-    $this->error = NULL; // so no confusion is caused
-
-    if (!$this->connected()) {
-      $this->error = array(
-              'error' => "Called Data() without being connected");
-      return FALSE;
-    }
-
-    fputs($this->smtp_conn,"DATA" . Mailer::CRLF);
-
-    $rply = $this->getLines();
-    $code = substr($rply,0,3);
-
-    if ($this->do_debug >= 2) {
-      echo "SMTP -> FROM SERVER:" . $rply . Mailer::CRLF . '<br />';
-    }
-
-    if ($code != 354) {
-      $this->error =
-        array('error' => "DATA command not accepted from server",
-              "smtp_code" => $code,
-              "smtp_msg" => substr($rply,4));
-      if ($this->do_debug >= 1) {
-        echo "SMTP -> ERROR: " . $this->error['error'] . ": " . $rply . Mailer::CRLF . '<br />';
-      }
-      return FALSE;
-    }
-
-    /* the server is ready to accept data!
-     * according to rfc 821 we should not send more than 1000
-     * including the CRLF
-     * characters on a single line so we will break the data up
-     * into lines by \r and/or \n then if needed we will break
-     * each of those into smaller lines to fit within the limit.
-     * in addition we will be looking for lines that start with
-     * a period ' . ' and append and additional period ' . ' to that
-     * line. NOTE: this does not count towards limit.
-     */
-
-    // normalize the line breaks so we know the explode works
-    $msg_data = str_replace("\r\n","\n", $msg_data);
-    $msg_data = str_replace("\r","\n", $msg_data);
-    $lines = explode("\n", $msg_data);
-
-    /* we need to find a good way to determine is headers are
-     * in the msg_data or if it is a straight msg body
-     * currently I am assuming rfc 822 definitions of msg headers
-     * and if the first field of the first line (':' sperated)
-     * does not contain a space then it _should_ be a header
-     * and we can process all lines before a blank "" line as
-     * headers.
-     */
-
-    $field = substr($lines[0],0,strpos($lines[0],":"));
-    $in_headers = FALSE;
-    if (!empty($field) && !strstr($field," ")) {
-      $in_headers = TRUE;
-    }
-
-    $max_line_length = 998; // used below; set here for ease in change
-
-    while (list(, $line) = @each($lines)) {
-      $lines_out = NULL;
-      if ($line == "" && $in_headers) {
-        $in_headers = FALSE;
-      }
-      // ok we need to break this line up into several smaller lines
-      while (strlen($line) > $max_line_length) {
-        $pos = strrpos(substr($line,0, $max_line_length)," ");
-
-        // Patch to fix DOS attack
-        if (!$pos) {
-          $pos = $max_line_length - 1;
-          $lines_out[] = substr($line,0, $pos);
-          $line = substr($line, $pos);
-        } else {
-          $lines_out[] = substr($line,0, $pos);
-          $line = substr($line, $pos + 1);
+    public function data($msg_data) {
+        $this->error = NULL; // so no confusion is caused
+        if (!$this->connected()) {
+            $this->error = array('error' => 'Called data() without being connected');
+            return FALSE;
         }
-
-        /* if processing headers add a LWSP-char to the front of new line
-         * rfc 822 on long msg headers
+        fputs($this->smtp_conn, 'DATA' . Mailer::CRLF);
+        $rply = $this->getLines();
+        $code = substr($rply, 0, 3);
+        if ($this->do_debug >= 2) {
+            echo 'SMTP -> FROM SERVER:' . $rply . Mailer::CRLF . '<br />';
+        }
+        if ($code != 354) {
+            $this->error = array(
+			    'error'     => 'DATA command not accepted from server',
+                'smtp_code' => $code,
+                'smtp_msg'  => substr($rply, 4)
+		    );
+            if ($this->do_debug >= 1) {
+                echo 'SMTP -> ERROR: ' . $this->error['error'] . ': ' . $rply . Mailer::CRLF . '<br />';
+            }
+            return FALSE;
+        }
+        /* the server is ready to accept data!
+         * according to rfc 821 we should not send more than 1000
+         * including the CRLF
+         * characters on a single line so we will break the data up
+         * into lines by \r and/or \n then if needed we will break
+         * each of those into smaller lines to fit within the limit.
+         * in addition we will be looking for lines that start with
+         * a period ' . ' and append and additional period ' . ' to that
+         * line. NOTE: this does not count towards limit.
          */
-        if ($in_headers) {
-          $line = "\t" . $line;
+        // normalize the line breaks so we know the explode works
+        $msg_data = str_replace("\r\n", "\n", $msg_data);
+        $msg_data = str_replace("\r", "\n", $msg_data);
+        $lines    = explode("\n", $msg_data);
+        /* we need to find a good way to determine is headers are
+         * in the msg_data or if it is a straight msg body
+         * currently I am assuming rfc 822 definitions of msg headers
+         * and if the first field of the first line (':' sperated)
+         * does not contain a space then it _should_ be a header
+         * and we can process all lines before a blank "" line as
+         * headers.
+         */
+        $field = substr($lines[0], 0, strpos($lines[0], ':'));
+        $in_headers = FALSE;
+        if (!empty($field) && !strstr($field, ' ')) {
+            $in_headers = TRUE;
         }
-      }
-      $lines_out[] = $line;
-
-      // send the lines to the server
-      while (list(, $line_out) = @each($lines_out)) {
-        if (strlen($line_out) > 0)
-        {
-          if (substr($line_out, 0, 1) == " . ") {
-            $line_out = " . " . $line_out;
-          }
+        $max_line_length = 998; // used below; set here for ease in change
+        while (list(, $line) = @each($lines)) {
+            $lines_out = NULL;
+            if ($line == '' && $in_headers) {
+                $in_headers = FALSE;
+            }
+            // ok we need to break this line up into several smaller lines
+            while (strlen($line) > $max_line_length) {
+                $pos = strrpos(substr($line, 0, $max_line_length), ' ');
+                // Patch to fix DOS attack
+                if (!$pos) {
+                    $pos = $max_line_length - 1;
+                    $lines_out[] = substr($line, 0, $pos);
+                    $line = substr($line, $pos);
+                } else {
+                    $lines_out[] = substr($line, 0, $pos);
+                    $line = substr($line, $pos + 1);
+                }
+                /* if processing headers add a LWSP-char to the front of new line
+                 * rfc 822 on long msg headers
+                 */
+                if ($in_headers) {
+                    $line = '    ' . $line;
+                }
+            }
+            $lines_out[] = $line;
+            // send the lines to the server
+            while (list(, $line_out) = @each($lines_out)) {
+                if (strlen($line_out) > 0) {
+                    if (substr($line_out, 0, 1) == ' . ') {
+                        $line_out = ' . ' . $line_out;
+                    }
+                }
+                fputs($this->smtp_conn, $line_out . Mailer::CRLF);
+            }
         }
-        fputs($this->smtp_conn, $line_out . Mailer::CRLF);
-      }
+        // message data has been sent
+        fputs($this->smtp_conn, Mailer::CRLF . ' . ' . Mailer::CRLF);
+        $rply = $this->getLines();
+        $code = substr($rply, 0, 3);
+        if ($this->do_debug >= 2) {
+            echo 'SMTP -> FROM SERVER:' . $rply . Mailer::CRLF . '<br />';
+        }
+        if ($code != 250) {
+            $this->error = array(
+		        'error'     => 'DATA not accepted from server',
+                'smtp_code' => $code,
+                'smtp_msg'  => substr($rply, 4)
+		    );
+            if ($this->do_debug >= 1) {
+                echo 'SMTP -> ERROR: ' . $this->error['error'] . ': ' . $rply . Mailer::CRLF . '<br />';
+            }
+            return FALSE;
+        }
+        return TRUE;
     }
 
-    // message data has been sent
-    fputs($this->smtp_conn, Mailer::CRLF . " . " . Mailer::CRLF);
-
-    $rply = $this->getLines();
-    $code = substr($rply,0,3);
-
-    if ($this->do_debug >= 2) {
-      echo "SMTP -> FROM SERVER:" . $rply . Mailer::CRLF . '<br />';
+    /**
+     * Sends the HELO command to the smtp server.
+     * This makes sure that we and the server are in
+     * the same known state.
+     *
+     * Implements from rfc 821: HELO <SP> <domain> <CRLF>
+     *
+     * SMTP CODE SUCCESS: 250
+     * SMTP CODE ERROR  : 500, 501, 504, 421
+     * @access public
+     * @return bool
+     */
+    public function hello($host='localhost') {
+        $this->error = NULL; // so no confusion is caused
+        if (!$this->connected()) {
+            $this->error = array('error' => 'Called hello() without being connected');
+            return FALSE;
+        }
+        // Send extended hello first (RFC 2821)
+        if (!$this->sendHello('EHLO', $host)) {
+            if (!$this->sendHello('HELO', $host)) {
+                return FALSE;
+            }
+        }
+        return TRUE;
     }
-
-    if ($code != 250) {
-      $this->error =
-        array('error' => "DATA not accepted from server",
-              "smtp_code" => $code,
-              "smtp_msg" => substr($rply,4));
-      if ($this->do_debug >= 1) {
-        echo "SMTP -> ERROR: " . $this->error['error'] . ": " . $rply . Mailer::CRLF . '<br />';
-      }
-      return FALSE;
-    }
-    return TRUE;
-  }
-
-  /**
-   * Sends the HELO command to the smtp server.
-   * This makes sure that we and the server are in
-   * the same known state.
-   *
-   * Implements from rfc 821: HELO <SP> <domain> <CRLF>
-   *
-   * SMTP CODE SUCCESS: 250
-   * SMTP CODE ERROR  : 500, 501, 504, 421
-   * @access public
-   * @return bool
-   */
-  public function Hello($host = '') {
-    $this->error = NULL; // so no confusion is caused
-
-    if (!$this->connected()) {
-      $this->error = array(
-            'error' => "Called Hello() without being connected");
-      return FALSE;
-    }
-
-    // if hostname for HELO was not specified send default
-    if (empty($host)) {
-      // determine appropriate default to send to server
-      $host = "localhost";
-    }
-
-    // Send extended hello first (RFC 2821)
-    if (!$this->sendHello("EHLO", $host)) {
-      if (!$this->sendHello("HELO", $host)) {
-        return FALSE;
-      }
-    }
-
-    return TRUE;
-  }
 
   /**
    * Sends a HELO/EHLO command.

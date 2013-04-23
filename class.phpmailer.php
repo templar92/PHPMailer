@@ -41,7 +41,6 @@ class Mailer {
     /////////////////////////////////////////////////
     
     public $host          = 'localhost';
-    public $port          = 25;
     public $helo          = '';
     public $smtp_secure    = '';
     public $smtp_auth      = FALSE;
@@ -460,7 +459,7 @@ class Mailer {
                     $port = $hostinfo[2];
                 } else {
                     $host = $hosts[$index];
-                    $port = $this->port;
+                    $port = Smtp::DEFAULT_PORT;
                 }                
                 $tls = ($this->smtp_secure == 'tls');
                 $ssl = ($this->smtp_secure == 'ssl');                
