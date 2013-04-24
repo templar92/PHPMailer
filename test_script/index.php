@@ -358,7 +358,7 @@ if (count($errorMsg) > 0 ) {
             <td class="colrite"><table>
                 <tr>
                   <td><input type="radio" name="test_type" value="mail" <?php echo ( $_POST['test_type'] == 'mail') ? 'checked' : ''; ?>></td>
-                  <td>Mail()</td>
+                  <td>mail()</td>
                 </tr>
                 <tr>
                   <td><input type="radio" name="test_type" value="sendmail" <?php echo ( $_POST['test_type'] == 'sendmail') ? 'checked' : ''; ?>></td>

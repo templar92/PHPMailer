@@ -389,7 +389,7 @@ class Mailer {
             throw new MailerException($this->lang('smtp_connect_failed'), self::STOP_CRITICAL);
         }
         $smtp_from = ($this->sender == '') ? $this->from : $this->sender;
-        if (!$this->smtp->Mail($smtp_from)) {
+        if (!$this->smtp->mail($smtp_from)) {
             throw new MailerException($this->lang('from_failed') . $smtp_from, self::STOP_CRITICAL);
         }        
         // Attempt to send attach all recipients

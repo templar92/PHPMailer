@@ -2,6 +2,7 @@
 class Smtp {
 
     const DEFAULT_PORT = 25;
+    const COMMAND_OK   = 250;
 
     public $do_debug;       // the level of debug to perform
     public $do_verp = FALSE;
@@ -14,6 +15,7 @@ class Smtp {
     private $smtp_conn; // the socket to the server
     private $error;     // error if any on the last call
     private $helo_rply; // the reply the server sent to us for HELO
+    private $cmd_reply;
 
   /**
    * Initialize the class so that the data is in a known state.
@@ -323,221 +325,117 @@ class Smtp {
         return TRUE;
     }
 
-  /**
-   * Sends a HELO/EHLO command.
-   * @access private
-   * @return bool
-   */
-  private function SendHello($hello, $host) {
-    fputs($this->smtp_conn, $hello . " " . $host . Mailer::CRLF);
-
-    $rply = $this->getLines();
-    $code = substr($rply,0,3);
-
-    if ($this->do_debug >= 2) {
-      echo "SMTP -> FROM SERVER: " . $rply . Mailer::CRLF . '<br />';
+    private function sendCommand($command, $success_code=self::COMMAND_OK, $check_connection=TRUE) {
+        $this->error = NULL; // so no confusion is caused
+        if ($check_connection && !$this->connected()) {
+            $this->error = array('error' => 'Not connected');
+            return FALSE;
+        }
+        fputs($this->smtp_conn, $command . Mailer::CRLF);
+        $rply = $this->getLines();
+        $code = substr($rply, 0, 3);
+        if ($this->do_debug >= 2) {
+            echo 'SMTP -> FROM SERVER:' . $rply . Mailer::CRLF . '<br />';
+        }
+        $success_code = is_array($success_code) ? $success_code : array($success_code);
+        $ok = TRUE;
+        foreach ($success_code as $sc) {
+            if ($code != $sc) {
+                $ok = FALSE;
+                break;
+            }
+        }
+        if (!$ok) {
+            $this->error = array(
+                'error'     => 'COMMAND: "' . $command . '" failed',
+                'smtp_code' => $code,
+                'smtp_msg'  => substr($rply, 4)
+            );
+            if ($this->do_debug >= 1) {
+                echo 'SMTP -> ERROR: ' . $this->error['error'] . ': ' . $rply . Mailer::CRLF . '<br />';
+            }
+            return FALSE;
+        }
+        $this->cmd_reply = $rply;
+        return TRUE;
     }
-
-    if ($code != 250) {
-      $this->error =
-        array('error' => $hello . " not accepted from server",
-              "smtp_code" => $code,
-              "smtp_msg" => substr($rply,4));
-      if ($this->do_debug >= 1) {
-        echo "SMTP -> ERROR: " . $this->error['error'] . ": " . $rply . Mailer::CRLF . '<br />';
-      }
-      return FALSE;
+    /**
+     * Sends a HELO/EHLO command.
+     * @access private
+     * @return bool
+     */
+    private function sendHello($hello, $host='localhost') {
+        $result = $this->sendCommand("$hello $host", self::COMMAND_OK, FALSE);
+        if ($result) {
+            $this->helo_rply = $this->cmd_reply;
+        }    
+        return $result;
     }
-
-    $this->helo_rply = $rply;
-
-    return TRUE;
-  }
-
-  /**
-   * Starts a mail transaction from the email address specified in
-   * $from. Returns TRUE if successful or FALSE otherwise. If True
-   * the mail transaction is started and then one or more Recipient
-   * commands may be called followed by a Data command.
-   *
-   * Implements rfc 821: MAIL <SP> FROM:<reverse-path> <CRLF>
-   *
-   * SMTP CODE SUCCESS: 250
-   * SMTP CODE SUCCESS: 552,451,452
-   * SMTP CODE SUCCESS: 500,501,421
-   * @access public
-   * @return bool
-   */
-  public function Mail($from) {
-    $this->error = NULL; // so no confusion is caused
-
-    if (!$this->connected()) {
-      $this->error = array(
-              'error' => "Called Mail() without being connected");
-      return FALSE;
+    /**
+     * Starts a mail transaction from the email address specified in
+     * $from. Returns TRUE if successful or FALSE otherwise. If True
+     * the mail transaction is started and then one or more Recipient
+     * commands may be called followed by a Data command.
+     *
+     * Implements rfc 821: MAIL <SP> FROM:<reverse-path> <CRLF>
+     *
+     * SMTP CODE SUCCESS: 250
+     * SMTP CODE SUCCESS: 552,451,452
+     * SMTP CODE SUCCESS: 500,501,421
+     * @access public
+     * @return bool
+     */
+    public function mail($from) {
+        return $this->sendCommand('MAIL FROM:<' . $from . '>' . ($this->do_verp ? 'XVERP' : ''));
     }
-
-    $useVerp = ($this->do_verp ? "XVERP" : "");
-    fputs($this->smtp_conn,"MAIL FROM:<" . $from . ">" . $useVerp . Mailer::CRLF);
-
-    $rply = $this->getLines();
-    $code = substr($rply,0,3);
-
-    if ($this->do_debug >= 2) {
-      echo "SMTP -> FROM SERVER:" . $rply . Mailer::CRLF . '<br />';
+    /**
+     * Sends the quit command to the server and then closes the socket
+     * if there is no error or the $close_on_error argument is TRUE.
+     *
+     * Implements from rfc 821: QUIT <CRLF>
+     *
+     * SMTP CODE SUCCESS: 221
+     * SMTP CODE ERROR  : 500
+     * @access public
+     * @return bool
+     */
+    public function quit($close_on_error=TRUE) {
+        $result = $this->sendCommand('quit', 221);
+        if ($close_on_error && !$result) {
+            $this->close();
+        }
+        return $rval;
     }
-
-    if ($code != 250) {
-      $this->error =
-        array('error' => "MAIL not accepted from server",
-              "smtp_code" => $code,
-              "smtp_msg" => substr($rply,4));
-      if ($this->do_debug >= 1) {
-        echo "SMTP -> ERROR: " . $this->error['error'] . ": " . $rply . Mailer::CRLF . '<br />';
-      }
-      return FALSE;
+    /**
+     * Sends the command RCPT to the SMTP server with the TO: argument of $to.
+     * Returns TRUE if the recipient was accepted FALSE if it was rejected.
+     *
+     * Implements from rfc 821: RCPT <SP> TO:<forward-path> <CRLF>
+     *
+     * SMTP CODE SUCCESS: 250,251
+     * SMTP CODE FAILURE: 550,551,552,553,450,451,452
+     * SMTP CODE ERROR  : 500,501,503,421
+     * @access public
+     * @return bool
+     */
+    public function recipient($to) {
+        return $this->sendCommand('RCPT TO:<' . $to . '>', array(250, 251));        
     }
-    return TRUE;
-  }
-
-  /**
-   * Sends the quit command to the server and then closes the socket
-   * if there is no error or the $close_on_error argument is TRUE.
-   *
-   * Implements from rfc 821: QUIT <CRLF>
-   *
-   * SMTP CODE SUCCESS: 221
-   * SMTP CODE ERROR  : 500
-   * @access public
-   * @return bool
-   */
-  public function Quit($close_on_error = TRUE) {
-    $this->error = NULL; // so there is no confusion
-
-    if (!$this->connected()) {
-      $this->error = array(
-              'error' => "Called Quit() without being connected");
-      return FALSE;
+    /**
+     * Sends the RSET command to abort and transaction that is
+     * currently in progress. Returns TRUE if successful FALSE
+     * otherwise.
+     *
+     * Implements rfc 821: RSET <CRLF>
+     *
+     * SMTP CODE SUCCESS: 250
+     * SMTP CODE ERROR  : 500,501,504,421
+     * @access public
+     * @return bool
+     */
+    public function reset() {
+        return $this->sendCommand('RSET');
     }
-
-    // send the quit command to the server
-    fputs($this->smtp_conn,"quit" . Mailer::CRLF);
-
-    // get any good-bye messages
-    $byemsg = $this->getLines();
-
-    if ($this->do_debug >= 2) {
-      echo "SMTP -> FROM SERVER:" . $byemsg . Mailer::CRLF . '<br />';
-    }
-
-    $rval = TRUE;
-    $e = NULL;
-
-    $code = substr($byemsg,0,3);
-    if ($code != 221) {
-      // use e as a tmp var cause Close will overwrite $this->error
-      $e = array('error' => "SMTP server rejected quit command",
-                 "smtp_code" => $code,
-                 "smtp_rply" => substr($byemsg,4));
-      $rval = FALSE;
-      if ($this->do_debug >= 1) {
-        echo "SMTP -> ERROR: " . $e['error'] . ": " . $byemsg . Mailer::CRLF . '<br />';
-      }
-    }
-
-    if (empty($e) || $close_on_error) {
-      $this->close();
-    }
-
-    return $rval;
-  }
-
-  /**
-   * Sends the command RCPT to the SMTP server with the TO: argument of $to.
-   * Returns TRUE if the recipient was accepted FALSE if it was rejected.
-   *
-   * Implements from rfc 821: RCPT <SP> TO:<forward-path> <CRLF>
-   *
-   * SMTP CODE SUCCESS: 250,251
-   * SMTP CODE FAILURE: 550,551,552,553,450,451,452
-   * SMTP CODE ERROR  : 500,501,503,421
-   * @access public
-   * @return bool
-   */
-  public function Recipient($to) {
-    $this->error = NULL; // so no confusion is caused
-
-    if (!$this->connected()) {
-      $this->error = array(
-              'error' => "Called Recipient() without being connected");
-      return FALSE;
-    }
-
-    fputs($this->smtp_conn,"RCPT TO:<" . $to . ">" . Mailer::CRLF);
-
-    $rply = $this->getLines();
-    $code = substr($rply,0,3);
-
-    if ($this->do_debug >= 2) {
-      echo "SMTP -> FROM SERVER:" . $rply . Mailer::CRLF . '<br />';
-    }
-
-    if ($code != 250 && $code != 251) {
-      $this->error =
-        array('error' => "RCPT not accepted from server",
-              "smtp_code" => $code,
-              "smtp_msg" => substr($rply,4));
-      if ($this->do_debug >= 1) {
-        echo "SMTP -> ERROR: " . $this->error['error'] . ": " . $rply . Mailer::CRLF . '<br />';
-      }
-      return FALSE;
-    }
-    return TRUE;
-  }
-
-  /**
-   * Sends the RSET command to abort and transaction that is
-   * currently in progress. Returns TRUE if successful FALSE
-   * otherwise.
-   *
-   * Implements rfc 821: RSET <CRLF>
-   *
-   * SMTP CODE SUCCESS: 250
-   * SMTP CODE ERROR  : 500,501,504,421
-   * @access public
-   * @return bool
-   */
-  public function Reset() {
-    $this->error = NULL; // so no confusion is caused
-
-    if (!$this->connected()) {
-      $this->error = array(
-              'error' => "Called Reset() without being connected");
-      return FALSE;
-    }
-
-    fputs($this->smtp_conn,"RSET" . Mailer::CRLF);
-
-    $rply = $this->getLines();
-    $code = substr($rply,0,3);
-
-    if ($this->do_debug >= 2) {
-      echo "SMTP -> FROM SERVER:" . $rply . Mailer::CRLF . '<br />';
-    }
-
-    if ($code != 250) {
-      $this->error =
-        array('error' => "RSET failed",
-              "smtp_code" => $code,
-              "smtp_msg" => substr($rply,4));
-      if ($this->do_debug >= 1) {
-        echo "SMTP -> ERROR: " . $this->error['error'] . ": " . $rply . Mailer::CRLF . '<br />';
-      }
-      return FALSE;
-    }
-
-    return TRUE;
-  }
 
   /**
    * Starts a mail transaction from the email address specified in
