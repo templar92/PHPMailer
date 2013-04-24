@@ -92,22 +92,22 @@ class Mailer {
         $this->exceptions = ($exceptions === TRUE);
     }
 
-    public function isHtml($ishtml=TRUE) {
+    public function useHtml($ishtml=TRUE) {
         $this->content_type = $ishtml ? 'text/html': 'text/plain';
     }
 
-    public function isSmtp() { $this->mailer = 'smtp'; }
+    public function useSmtp() { $this->mailer = 'smtp'; }
 
-    public function isMail() { $this->mailer = 'mail'; }
+    public function useMail() { $this->mailer = 'mail'; }
     
-    public function isSendmail() {
+    public function useSendmail() {
         if (!stristr(ini_get('sendmail_path'), 'sendmail')) {
             $this->sendmail = '/var/qmail/bin/sendmail';
         }
         $this->mailer = 'sendmail';
     }    
 
-    public function isQmail() {
+    public function useQmail() {
         if (stristr(ini_get('sendmail_path'), 'qmail')) {
             $this->sendmail = '/var/qmail/bin/sendmail';
         }
@@ -443,7 +443,7 @@ class Mailer {
     }
 
     public function smtpConnect() {
-        if (is_NULL($this->smtp)) {
+        if (is_null($this->smtp)) {
             $this->smtp = new Smtp();
         }        
         $this->smtp->do_debug = $this->smtp_debug;
@@ -495,7 +495,7 @@ class Mailer {
     }
 
     public function smtpClose() {
-        if (!is_NULL($this->smtp)) {
+        if (!is_null($this->smtp)) {
             if ($this->smtp->connected()) {
                 $this->smtp->quit();
                 $this->smtp->close();
@@ -1366,7 +1366,7 @@ class Mailer {
 
     protected function setError($msg) {
         $this->error_count++;
-        if ($this->mailer == 'smtp' and !is_NULL($this->smtp)) {
+        if ($this->mailer == 'smtp' and !is_null($this->smtp)) {
             $lasterror = $this->smtp->getError();
             if (!empty($lasterror) and array_key_exists('smtp_msg', $lasterror)) {
                 $msg .= '<p>' . $this->lang('smtp_error') . $lasterror['smtp_msg'] . "</p>\n";
@@ -1434,7 +1434,7 @@ class Mailer {
                 }
             }
         }
-        $this->isHtml(TRUE);
+        $this->useHtml(TRUE);
         $this->body = $message;
         if (empty($this->alt_body)) {
             $textMsg = trim(strip_tags(preg_replace('/<(head|title|style|script)[^>]*>.*?<\/\\1>/s', '', $message)));

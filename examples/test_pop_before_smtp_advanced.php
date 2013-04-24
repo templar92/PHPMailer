@@ -8,12 +8,12 @@
 require_once(' ../class.phpmailer.php');
 require_once(' ../class.pop3.php'); // required for POP before SMTP
 
-$pop = new POP3();
+$pop = new Pop3();
 $pop->Authorise('pop3.yourdomain.com', 110, 30, 'username', 'password', 1);
 
 $mail = new PHPMailer(TRUE); // the TRUE param means it will throw exceptions on errors, which we need to catch
 
-$mail->isSmtp();
+$mail->useSmtp();
 
 try {
   $mail->smtp_debug = 2;

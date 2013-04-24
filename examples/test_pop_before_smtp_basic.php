@@ -8,7 +8,7 @@
 require_once(' ../class.phpmailer.php');
 require_once(' ../class.pop3.php'); // required for POP before SMTP
 
-$pop = new POP3();
+$pop = new Pop3();
 $pop->Authorise('pop3.yourdomain.com', 110, 30, 'username', 'password', 1);
 
 $mail = new PHPMailer();
@@ -16,7 +16,7 @@ $mail = new PHPMailer();
 $body             = file_get_contents('contents.html');
 $body             = eregi_replace("[\]",'', $body);
 
-$mail->isSmtp();
+$mail->useSmtp();
 $mail->smtp_debug = 2;
 $mail->host     = 'pop3.yourdomain.com';
 

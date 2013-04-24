@@ -19,7 +19,7 @@ $mail                = new PHPMailer();
 $body                = file_get_contents('contents.html');
 $body                = eregi_replace("[\]",'', $body);
 
-$mail->isSmtp(); // telling the class to use SMTP
+$mail->useSmtp(); // telling the class to use SMTP
 $mail->host          = "smtp1.site.com;smtp2.site.com";
 $mail->smtp_auth      = TRUE;                  // enable SMTP authentication
 $mail->smtp_keep_alive = TRUE;                  // SMTP connection will not close after each email sent

@@ -9,7 +9,7 @@
 require_once(' ../class.phpmailer.php');
 
 $mail = new PHPMailer(TRUE); // the TRUE param means it will throw exceptions on errors, which we need to catch
-$mail->isSendmail(); // telling the class to use SendMail transport
+$mail->useSendmail(); // telling the class to use SendMail transport
 
 try {
   $mail->addReplyTo('name@yourdomain.com', 'First Last');

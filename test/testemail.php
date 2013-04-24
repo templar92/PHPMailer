@@ -13,14 +13,14 @@ try {
 	$body             = file_get_contents('contents.html');
 	$body             = preg_replace('/\\\\/','', $body); //Strip backslashes
 
-	$mail->isSmtp();                           // tell the class to use SMTP
+	$mail->useSmtp();                           // tell the class to use SMTP
 	$mail->smtp_auth   = TRUE;                  // enable SMTP authentication
 	$mail->port       = 25;                    // set the SMTP server port
 	$mail->host       = "mail.yourdomain.com"; // SMTP server
 	$mail->username   = "name@domain.com";     // SMTP server username
 	$mail->Password   = "password";            // SMTP server password
 
-	$mail->isSendmail();  // tell the class to use Sendmail
+	$mail->useSendmail();  // tell the class to use Sendmail
 
 	$mail->addReplyTo("name@domain.com","First Last");
 
@@ -38,7 +38,7 @@ try {
 
 	$mail->msgHtml($body);
 
-	$mail->isHtml(TRUE); // send as HTML
+	$mail->useHtml(TRUE); // send as HTML
 
 	$mail->send();
 	echo 'Message has been sent. ';

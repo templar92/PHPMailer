@@ -41,7 +41,7 @@ if ($testLite) {
 }
 
 try {
-  $mail->isMail(); // telling the class to use SMTP
+  $mail->useMail(); // telling the class to use SMTP
   $mail->setFrom('you@yourdomain.com', 'Your Name');
   $mail->addAddress('another@yourdomain.com', 'John Doe');
   $mail->subject = 'PHPMailer Lite Test Subject via Mail()';

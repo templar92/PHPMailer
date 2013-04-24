@@ -366,7 +366,7 @@ class phpmailerTest extends PHPUnit_Framework_TestCase {
      */
     function test_Html() {
     
-        $this->Mail->isHtml(TRUE);
+        $this->Mail->useHtml(TRUE);
         $this->Mail->subject .= ": HTML only";
         
         $this->Mail->body = "This is a <b>test message</b> written in HTML. </br>" .
@@ -385,7 +385,7 @@ class phpmailerTest extends PHPUnit_Framework_TestCase {
 
         $this->Mail->body = "This is the <b>HTML</b> part of the email. ";
         $this->Mail->subject .= ": HTML + Attachment";
-        $this->Mail->isHtml(TRUE);
+        $this->Mail->useHtml(TRUE);
         
         if (!$this->Mail->addAttachment(__FILE__, "test_attach.txt"))
         {
@@ -405,7 +405,7 @@ class phpmailerTest extends PHPUnit_Framework_TestCase {
         $this->Mail->body = "Embedded Image: <img alt=\"phpmailer\" src=\"cid:my-attach\">" .
                      "Here is an image!</a>";
         $this->Mail->subject .= ": Embedded Image";
-        $this->Mail->isHtml(TRUE);
+        $this->Mail->useHtml(TRUE);
         
         if (!$this->Mail->addEmbeddedImage("test.png", "my-attach", "test.png",
                                           "base64", "image/png"))
@@ -430,7 +430,7 @@ class phpmailerTest extends PHPUnit_Framework_TestCase {
         $this->Mail->body = "Embedded Image: <img alt=\"phpmailer\" src=\"cid:my-attach\">" .
                      "Here is an image!</a>";
         $this->Mail->subject .= ": Embedded Image + Attachment";
-        $this->Mail->isHtml(TRUE);
+        $this->Mail->useHtml(TRUE);
         
         if (!$this->Mail->addEmbeddedImage("test.png", "my-attach", "test.png",
                                           "base64", "image/png"))
@@ -474,7 +474,7 @@ class phpmailerTest extends PHPUnit_Framework_TestCase {
         $this->Mail->body = "This is the <b>HTML</b> part of the email. ";
         $this->Mail->alt_body = "This is the text part of the email. ";
         $this->Mail->subject .= ": AltBody + Attachment";
-        $this->Mail->isHtml(TRUE);
+        $this->Mail->useHtml(TRUE);
         
         if (!$this->Mail->addAttachment(__FILE__, "test_attach.txt"))
         {
@@ -509,7 +509,7 @@ class phpmailerTest extends PHPUnit_Framework_TestCase {
         $subject = $this->Mail->subject;
 
         $this->Mail->subject = $subject . ": sendmail";
-	$this->Mail->isSendmail();
+	$this->Mail->useSendmail();
         $this->assertTrue($this->Mail->send(), $this->Mail->error_info);
     }
 
@@ -519,7 +519,7 @@ class phpmailerTest extends PHPUnit_Framework_TestCase {
         $subject = $this->Mail->subject;
 
         $this->Mail->subject = $subject . ": mail()";
-	$this->Mail->isMail();
+	$this->Mail->useMail();
         $this->assertTrue($this->Mail->send(), $this->Mail->error_info);
     }
 
@@ -627,11 +627,11 @@ class phpmailerTest extends PHPUnit_Framework_TestCase {
 	    $this->Mail->addCustomHeader('SomeHeader: Some Value');
 	    $this->Mail->clearCustomHeaders();
 	    $this->Mail->clearAttachments();
-	    $this->Mail->isHtml(FALSE);
-	    $this->Mail->isSmtp();
-	    $this->Mail->isMail();
+	    $this->Mail->useHtml(FALSE);
+	    $this->Mail->useSmtp();
+	    $this->Mail->useMail();
 	    $this->Mail->IsSendMail();
-   	    $this->Mail->isQmail();
+   	    $this->Mail->useQmail();
 	    $this->Mail->setLanguage('fr');
 	    $this->Mail->sender = '';
 	    $this->Mail->createHeader();

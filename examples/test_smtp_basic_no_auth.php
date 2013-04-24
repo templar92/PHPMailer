@@ -19,7 +19,7 @@ $mail             = new PHPMailer();
 $body             = file_get_contents('contents.html');
 $body             = eregi_replace("[\]",'', $body);
 
-$mail->isSmtp(); // telling the class to use SMTP
+$mail->useSmtp(); // telling the class to use SMTP
 $mail->host       = "mail.yourdomain.com"; // SMTP server
 $mail->smtp_debug  = 2;                     // enables SMTP debug information (for testing)
                                            // 1 = errors and messages

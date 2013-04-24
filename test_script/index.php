@@ -57,7 +57,7 @@ if ($_POST['submit'] == "Submit" ) {
   }
 
   if ($_POST['test_type'] == "smtp" ) {
-    $mail->isSmtp();  // telling the class to use SMTP
+    $mail->useSmtp();  // telling the class to use SMTP
     $mail->smtp_debug  = $_POST['smtp_debug'];
     $mail->smtp_auth   = $_POST['smtp_authenticate'];     // enable SMTP authentication
     $mail->port       = $_POST['smtp_port'];             // set the SMTP port
@@ -65,11 +65,11 @@ if ($_POST['submit'] == "Submit" ) {
     $mail->username   = $_POST['authenticate_username']; // SMTP account username
     $mail->Password   = $_POST['authenticate_password']; // SMTP account password
   } elseif ($_POST['test_type'] == "mail" ) {
-    $mail->isMail();      // telling the class to use PHP's Mail()
+    $mail->useMail();      // telling the class to use PHP's Mail()
   } elseif ($_POST['test_type'] == "sendmail" ) {
-    $mail->isSendmail();  // telling the class to use Sendmail
+    $mail->useSendmail();  // telling the class to use Sendmail
   } elseif ($_POST['test_type'] == "qmail" ) {
-    $mail->isQmail();     // telling the class to use Qmail
+    $mail->useQmail();     // telling the class to use Qmail
   }
 
   if ($_POST['From_Name'] != '' ) {
@@ -112,7 +112,7 @@ if ($_POST['submit'] == "Submit" ) {
 
   $mail->msgHtml($body);
 
-  // $mail->isHtml(TRUE); // send as HTML
+  // $mail->useHtml(TRUE); // send as HTML
 
   $mail->addAttachment("images/aikido.gif", "aikido.gif");  // optional name
   $mail->addAttachment("images/phpmailer.gif", "phpmailer.gif");  // optional name
@@ -204,7 +204,7 @@ if ($_POST['Message'] == '' ) {
 echo "\n";
 
 if ($_POST['test_type'] == "smtp" ) {
-  echo '$mail->isSmtp();  // telling the class to use SMTP' . "\n";
+  echo '$mail->useSmtp();  // telling the class to use SMTP' . "\n";
   echo '$mail->smtp_debug  = ' . $_POST['smtp_debug'] . "\n";
   echo '$mail->smtp_auth   = ' . $_POST['smtp_authenticate'];     // enable SMTP authentication' . "\n";
   echo '$mail->port       = ' . $_POST['smtp_port'];             // set the SMTP port' . "\n";
@@ -212,11 +212,11 @@ if ($_POST['test_type'] == "smtp" ) {
   echo '$mail->username   = ' . $_POST['authenticate_username']; // SMTP account username' . "\n";
   echo '$mail->Password   = ' . $_POST['authenticate_password']; // SMTP account password' . "\n";
 } elseif ($_POST['test_type'] == "mail" ) {
-  echo '$mail->isMail();      // telling the class to use PHP\'s Mail()' . "\n";
+  echo '$mail->useMail();      // telling the class to use PHP\'s Mail()' . "\n";
 } elseif ($_POST['test_type'] == "sendmail" ) {
-  echo '$mail->isSendmail();  // telling the class to use Sendmail' . "\n";
+  echo '$mail->useSendmail();  // telling the class to use Sendmail' . "\n";
 } elseif ($_POST['test_type'] == "qmail" ) {
-  echo '$mail->isQmail();     // telling the class to use Qmail' . "\n";
+  echo '$mail->useQmail();     // telling the class to use Qmail' . "\n";
 }
 ?>
 

@@ -10,7 +10,7 @@ require_once(' ../class.phpmailer.php');
 
 $mail = new PHPMailer(TRUE); // the TRUE param means it will throw exceptions on errors, which we need to catch
 
-$mail->isSmtp(); // telling the class to use SMTP
+$mail->useSmtp(); // telling the class to use SMTP
 
 try {
   $mail->host       = "mail.yourdomain.com"; // SMTP server
