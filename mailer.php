@@ -679,7 +679,7 @@ class Mailer {
         }        
         // mail() sets the subject itself
         if ($this->mailer != 'mail') {
-          $result .= $this->headerLine('Subject', $this->encodeHeader($this->secureHeader($this->subject)));
+            $result .= $this->headerLine('Subject', $this->encodeHeader($this->secureHeader($this->subject)));
         }        
         if ($this->message_id != '') {
             $result .= $this->headerLine('Message-ID', $this->message_id);
